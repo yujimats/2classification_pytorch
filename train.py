@@ -159,10 +159,10 @@ def train():
     time_trainval_total_start = time.perf_counter()
     with tqdm(total=max_itr) as pbar:
         pbar.set_description('training')
-        while True:
-            if iteration > max_itr:
-                break
+        while iteration < max_itr:
             for inputs, labels in train_dataloader:
+                if iteration >= max_itr:
+                    break
                 inputs = inputs.to(device)
                 labels = labels.to(device)
                 if count == 0:
@@ -210,7 +210,7 @@ def train():
                 pbar.update(1)
 
     time_trainval_total_end = time.perf_counter()
-    with open(os.path.join(output_save_path, 'logtime.txt'), 'a') as logfile:
+    with open(os.path.join(output_save_path, 'logtime.txt'), 'w') as logfile:
         logfile.write('total time: {}\n'.format(time_trainval_total_end - time_trainval_total_start))
 
     # ネットワーク重みの保存
@@ -249,7 +249,7 @@ def inference(dict_train):
     inference_dataset = MyDataset(list_inference, path_input, transform=transform, phase='val')
 
     # dataloader
-    inference_dataloader = data.Dataloader(inference_dataset, batch_size=batch_size, shuffle=True)
+    inference_dataloader = data.DataLoader(inference_dataset, batch_size=batch_size, shuffle=True)
 
     # デバイスを選択
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -271,12 +271,14 @@ def inference(dict_train):
         for inputs, labels in inference_dataloader:
             inputs = inputs.to(device)
             labels = labels.to(device)
-            outputs = net(inputs)
+            with torch.no_grad():
+                outputs = net(inputs)
             loss = criterion(outputs, labels)
             _, pred = torch.max(outputs, 1)
             total_loss += loss.item()
             Y.extend(labels)
             preds.extend(pred)
+            pbar.update(1)
 
     # 結果の保存
     acc_score = accuracy_score(y_true=Y, y_pred=preds)
