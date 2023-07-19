@@ -12,6 +12,7 @@ import torchvision.models as models
 
 from utils import ImageTransform, MyDataset
 from fix_seed import fix_seed
+from save_results import save_confusionmatrix
 
 USE_FINE_TUNING = False
 
@@ -33,7 +34,7 @@ def validation(net, device, criterion, val_dataloader):
             Y.extend(labels)
             preds.extend(pred)
             pbar.update(1)
-    return accuracy_score(y_true=Y, y_pred=preds), total_loss
+    return accuracy_score(y_true=Y, y_pred=preds), total_loss, Y, preds
 
 def train():
     random_seed = 1234 # 乱数シード
@@ -73,9 +74,9 @@ def train():
     list_filenames = os.listdir(path_input)
     list_file = []
     for filename in list_filenames:
-        if 'newfoundland' or 'pomeranian' in filename:
+        if ('newfoundland' in filename) or ('pomeranian' in filename):
             label = 0 # dog
-        elif 'Abyssinian' or 'Bombay' in filename:
+        elif ('Abyssinian' in filename) or ('Bombay' in filename):
             label = 1 # cat
         else:
             continue
@@ -146,10 +147,11 @@ def train():
     # 学習
     ## 最初にvalidation
     time_start = time.perf_counter()
-    acc_score, val_loss = validation(net=net, device=device, criterion=criterion, val_dataloader=val_dataloader)
+    acc_score, val_loss, Y, preds = validation(net=net, device=device, criterion=criterion, val_dataloader=val_dataloader)
     time_end = time.perf_counter()
     with open(path_save_logfile_val, 'a') as logfile:
         logfile.write('0,{},{},{}\n'.format(time_end-time_start, val_loss, acc_score))
+    save_confusionmatrix(y_true=Y, y_pred=preds, path_save=output_save_path, phase='initial_validation')
 
     count = 0
     iteration = 0
@@ -191,7 +193,7 @@ def train():
                     time_trainval_interval_end = time.perf_counter()
                     time_trainval_interval = time_trainval_interval_end - time_trainval_interval_start
                     # validation
-                    acc_score, loss_val = validation(net, device=device, criterion=criterion, val_dataloader=val_dataloader)
+                    acc_score, loss_val, Y, preds = validation(net, device=device, criterion=criterion, val_dataloader=val_dataloader)
                     # save log
                     ## training
                     with open(path_save_logfile_train, 'a') as logfile:
@@ -217,6 +219,7 @@ def train():
     save_path = os.path.join(output_save_path, 'weight.pth')
     torch.save(net.state_dict(), save_path)
     # 混合行列を保存
+    save_confusionmatrix(y_true=Y, y_pred=preds, path_save=output_save_path, phase='validation')
 
     # inferenceに引き継ぐパラメータを保存
     dict_train = {
@@ -286,6 +289,9 @@ def inference(dict_train):
     with open(path_save_result, 'w') as logfile:
         logfile.write('loss,accuracy\n')
         logfile.write('{},{}\n'.format(total_loss, acc_score))
+
+    # 混同行列の保存
+    save_confusionmatrix(y_true=Y, y_pred=preds, path_save=output_save_path, phase='inference')
 
 if __name__=='__main__':
     # 学習と検証
