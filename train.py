@@ -192,6 +192,7 @@ def train():
                 if count == val_interval:
                     time_trainval_interval_end = time.perf_counter()
                     time_trainval_interval = time_trainval_interval_end - time_trainval_interval_start
+                    total_loss = total_loss / val_interval
                     # validation
                     acc_score, loss_val, Y, preds = validation(net, device=device, criterion=criterion, val_dataloader=val_dataloader)
                     # save log
