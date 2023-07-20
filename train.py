@@ -2,7 +2,7 @@ import os
 import time
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score
 
 import torch
 import torch.nn as nn
@@ -34,7 +34,7 @@ def validation(net, device, criterion, val_dataloader):
             Y.extend(labels)
             preds.extend(pred)
             pbar.update(1)
-    return accuracy_score(y_true=Y, y_pred=preds), total_loss, Y, preds
+    return total_loss, Y, preds
 
 def train():
     random_seed = 1234 # 乱数シード
@@ -140,17 +140,20 @@ def train():
     path_save_logfile_train = os.path.join(output_save_path, 'log_score_train.csv')
     path_save_logfile_val = os.path.join(output_save_path, 'log_score_val.csv')
     with open(path_save_logfile_train, 'w') as logfile:
-        logfile.write('iteration,time,loss,acc\n')
+        logfile.write('iteration,time,loss,accuracy,precision,recall\n')
     with open(path_save_logfile_val, 'w') as logfile:
-        logfile.write('iteration,time,loss,acc\n')
+        logfile.write('iteration,time,loss,accuracy,precision,recall\n')
 
     # 学習
     ## 最初にvalidation
     time_start = time.perf_counter()
-    acc_score, val_loss, Y, preds = validation(net=net, device=device, criterion=criterion, val_dataloader=val_dataloader)
+    val_loss, Y, preds = validation(net=net, device=device, criterion=criterion, val_dataloader=val_dataloader)
+    accuracy = accuracy_score(y_true=Y, y_pred=preds)
+    precision = precision_score(y_true=Y, y_pred=preds)
+    recall = recall_score(y_true=Y, y_pred=preds)
     time_end = time.perf_counter()
     with open(path_save_logfile_val, 'a') as logfile:
-        logfile.write('0,{},{},{}\n'.format(time_end-time_start, val_loss, acc_score))
+        logfile.write('0,{},{},{},{},{}\n'.format(time_end-time_start, val_loss, accuracy, precision, recall))
     save_confusionmatrix(y_true=Y, y_pred=preds, path_save=output_save_path, phase='initial_validation')
 
     count = 0
@@ -194,14 +197,23 @@ def train():
                     time_trainval_interval = time_trainval_interval_end - time_trainval_interval_start
                     total_loss = total_loss / val_interval
                     # validation
-                    acc_score, loss_val, Y, preds = validation(net, device=device, criterion=criterion, val_dataloader=val_dataloader)
+                    loss_val, Y, preds = validation(net, device=device, criterion=criterion, val_dataloader=val_dataloader)
+                    # get scores
+                    ## train
+                    accuracy_train = accuracy_score(y_true=Y_train, y_pred=pred_train)
+                    precision_train = precision_score(y_true=Y_train, y_pred=pred_train)
+                    recall_train = recall_score(y_true=Y_train, y_pred=pred_train)
+                    ## validation
+                    accuracy_val = accuracy_score(y_true=Y, y_pred=preds)
+                    precision_val = precision_score(y_true=Y, y_pred=preds)
+                    recall_val = recall_score(y_true=Y, y_pred=preds)
                     # save log
                     ## training
                     with open(path_save_logfile_train, 'a') as logfile:
-                        logfile.write('{},{},{},{}\n'.format(iteration, time_trainval_interval, total_loss, accuracy_score(y_true=Y_train, y_pred=pred_train)))
+                        logfile.write('{},{},{},{},{},{}\n'.format(iteration, time_trainval_interval, total_loss, accuracy_train, precision_train, recall_train))
                     ## validation
                     with open(path_save_logfile_val, 'a') as logfile:
-                        logfile.write('{},{},{},{}\n'.format(iteration, time_trainval_interval, loss_val, acc_score))
+                        logfile.write('{},{},{},{},{},{}\n'.format(iteration, time_trainval_interval, loss_val, accuracy_val, precision_val, recall_val))
 
                     # 結果の描画
 
@@ -285,11 +297,13 @@ def inference(dict_train):
             pbar.update(1)
 
     # 結果の保存
-    acc_score = accuracy_score(y_true=Y, y_pred=preds)
+    accuracy = accuracy_score(y_true=Y, y_pred=preds)
+    precision = precision_score(y_true=Y, y_pred=preds)
+    recall = recall_score(y_true=Y, y_pred=preds)
     path_save_result = os.path.join(output_save_path, 'result_inference.csv')
     with open(path_save_result, 'w') as logfile:
-        logfile.write('loss,accuracy\n')
-        logfile.write('{},{}\n'.format(total_loss, acc_score))
+        logfile.write('loss,accuracy,precision,recall\n')
+        logfile.write('{},{}\n'.format(total_loss, accuracy, precision, recall))
 
     # 混同行列の保存
     save_confusionmatrix(y_true=Y, y_pred=preds, path_save=output_save_path, phase='inference')
