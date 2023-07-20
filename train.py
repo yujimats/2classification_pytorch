@@ -13,6 +13,7 @@ import torchvision.models as models
 from utils import ImageTransform, MyDataset
 from fix_seed import fix_seed
 from save_results import save_confusionmatrix
+from get_files import get_files_list
 
 USE_FINE_TUNING = False
 
@@ -71,16 +72,7 @@ def train():
         logfile.write('dir_output:{}\n'.format(dir_output))
 
     # 学習に使うデータをリストでまとめる
-    list_filenames = os.listdir(path_input)
-    list_file = []
-    for filename in list_filenames:
-        if ('newfoundland' in filename) or ('pomeranian' in filename):
-            label = 0 # dog
-        elif ('Abyssinian' in filename) or ('Bombay' in filename):
-            label = 1 # cat
-        else:
-            continue
-        list_file.append([filename, label, filename.split('_')[0]])
+    list_file = get_files_list(path_input=path_input, mode='dog&cats')
 
     # データをtrain, val, testの3つに分割
     list_train, list_val = train_test_split(list_file, shuffle=True, random_state=random_seed, test_size=0.2)
