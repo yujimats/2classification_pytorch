@@ -14,6 +14,7 @@ from utils import ImageTransform, MyDataset
 from fix_seed import fix_seed
 from save_results import save_confusionmatrix
 from get_files import get_files_list
+from view_score_vs_itr import save_score_vs_itr
 
 USE_FINE_TUNING = False
 
@@ -211,6 +212,7 @@ def train():
                         logfile.write('{},{},{},{},{},{}\n'.format(iteration, time_trainval_interval, loss_val, accuracy_val, precision_val, recall_val))
 
                     # 結果の描画
+                    save_score_vs_itr(path_output=output_save_path)
 
                     # reset
                     count = 0
