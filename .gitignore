@@ -3,8 +3,14 @@
 *.png
 *.bmp
 
+# txt files
+*.txt
+*.csv
+
 # directry
 dataset/
+dataset_pets/
+dataset_toyota_cars/
 output/
 
 # others

@@ -39,7 +39,8 @@ def validation(net, device, criterion, val_dataloader):
 
 def train():
     random_seed = 1234 # 乱数シード
-    path_input = os.path.join('dataset')
+    mode = 'toyota_cars'
+    path_input = os.path.join('dataset_' + mode)
     model = 'VGG16'
     use_pretrained = True
     batch_size = 32 # ミニバッチサイズ
@@ -51,10 +52,11 @@ def train():
     fix_seed(random_seed) # fix random seed
 
     # ログ用ファイルの用意
-    output_save_path = os.path.join(dir_output, 'itr{0}_{1}pre:{2}'.format(
+    output_save_path = os.path.join(dir_output, 'itr{0}_{1}pre:{2}_{3}'.format(
         max_itr,
         model,
-        use_pretrained
+        use_pretrained,
+        path_input
     ))
     os.makedirs(output_save_path, exist_ok=True)
 
@@ -72,7 +74,7 @@ def train():
         logfile.write('dir_output:{}\n'.format(dir_output))
 
     # 学習に使うデータをリストでまとめる
-    list_file = get_files_list(path_input=path_input, mode='dog&cats')
+    list_file = get_files_list(path_input=path_input, mode=mode)
 
     # データをtrain, val, testの3つに分割
     list_train, list_val = train_test_split(list_file, shuffle=True, random_state=random_seed, test_size=0.2)
@@ -85,8 +87,8 @@ def train():
     transform = ImageTransform(resize, mean, std)
 
     # dataset
-    train_dataset = MyDataset(list_train, path_input, transform=transform, phase='train')
-    val_dataset = MyDataset(list_val, path_input, transform=transform, phase='val')
+    train_dataset = MyDataset(list_train, transform=transform, phase='train')
+    val_dataset = MyDataset(list_val, transform=transform, phase='val')
 
     # dataloader
     train_dataloader = data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
