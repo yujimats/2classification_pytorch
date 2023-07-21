@@ -45,7 +45,7 @@ def train():
     use_pretrained = True
     batch_size = 32 # ミニバッチサイズ
     lr = 0.001 # 学習率
-    max_itr = 100 # 最大イテレーション数
+    max_itr = 200 # 最大イテレーション数
     val_interval = 10 # validation間隔
     dir_output = os.path.join('output') # output dir
 
@@ -72,6 +72,7 @@ def train():
         logfile.write('max_itr:{}\n'.format(max_itr))
         logfile.write('val_interval:{}\n'.format(val_interval))
         logfile.write('dir_output:{}\n'.format(dir_output))
+        logfile.write('mode:{}\n'.format(mode))
 
     # 学習に使うデータをリストでまとめる
     list_file = get_files_list(path_input=path_input, mode=mode)
@@ -256,7 +257,7 @@ def inference(dict_train):
     fix_seed(random_seed) # fix random seed
 
     # dataset
-    inference_dataset = MyDataset(list_inference, path_input, transform=transform, phase='val')
+    inference_dataset = MyDataset(list_inference, transform=transform, phase='val')
 
     # dataloader
     inference_dataloader = data.DataLoader(inference_dataset, batch_size=batch_size, shuffle=True)
