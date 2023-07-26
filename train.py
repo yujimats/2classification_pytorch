@@ -41,6 +41,10 @@ def validation(net, device, criterion, val_dataloader):
 def train():
     random_seed = 1234 # 乱数シード
     mode = 'toyota_cars'
+    label_0 = 'camry'
+    label_1 = 'corolla'
+    # label_0 = '4runner'
+    # label_1 = 'highlander'
     path_input = os.path.join('dataset_' + mode)
     model = 'VGG16'
     use_pretrained = True
@@ -53,11 +57,13 @@ def train():
     fix_seed(random_seed) # fix random seed
 
     # ログ用ファイルの用意
-    output_save_path = os.path.join(dir_output, 'itr{0}_{1}pre:{2}_{3}'.format(
+    output_save_path = os.path.join(dir_output, 'itr{0}_{1}pre:{2}_{3}_{4}vs{5}'.format(
         max_itr,
         model,
         use_pretrained,
-        path_input
+        path_input,
+        label_0,
+        label_1
     ))
     os.makedirs(output_save_path, exist_ok=True)
 
@@ -76,7 +82,7 @@ def train():
         logfile.write('mode:{}\n'.format(mode))
 
     # 学習に使うデータをリストでまとめる
-    list_file = get_files_list(path_input=path_input, mode=mode)
+    list_file = get_files_list(path_input=path_input, mode=mode, label_0=label_0, label_1=label_1)
 
     # データをtrain, val, testの3つに分割
     list_train, list_val = train_test_split(list_file, shuffle=True, random_state=random_seed, test_size=0.2)
