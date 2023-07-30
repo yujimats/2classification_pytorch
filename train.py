@@ -13,7 +13,7 @@ import torchvision.models as models
 from utils import ImageTransform, MyDataset
 from fix_seed import fix_seed
 from save_results import save_confusionmatrix
-from get_files import get_files_list
+from get_files import get_files_list_pets, get_files_list_toyota_cars
 from view_score_vs_itr import save_score_vs_itr
 
 USE_FINE_TUNING = False
@@ -82,7 +82,10 @@ def train():
         logfile.write('mode:{}\n'.format(mode))
 
     # 学習に使うデータをリストでまとめる
-    list_file = get_files_list(path_input=path_input, mode=mode, label_0=label_0, label_1=label_1)
+    if mode == 'toyota_cars':
+        list_file = get_files_list_toyota_cars(path_input=path_input, label_0=label_0, label_1=label_1)
+    elif mode == 'pets':
+        list_file = get_files_list_pets(path_input=path_input, label_0=label_0, label_1=label_1)
 
     # データをtrain, val, testの3つに分割
     list_train, list_val = train_test_split(list_file, shuffle=True, random_state=random_seed, test_size=0.2)
