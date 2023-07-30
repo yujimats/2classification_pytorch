@@ -14,7 +14,6 @@ def get_files_list_pets(path_input, label_0=None, label_1=None):
     return list_file
 
 def get_files_list_toyota_cars(path_input, label_0=None, label_1=None):
-    elif mode == 'toyota_cars':
     if (label_1 == None) or (label_1==None):
         print('if mode toyota_cars, select label name as label_0 and label_1')
         return
